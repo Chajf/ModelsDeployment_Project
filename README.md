@@ -8,15 +8,15 @@
 
 ## Project plan
 
-- Definition of the project's problem area [x]
-- First layout conept [x]
-- Project description [ ]
-- Tasks definition [ ]
-- Tasks assignment [ ]
-- First running build [ ]
-- Functionality testing [ ]
-- Deployment [ ]
-- Containerization [?]
+- [x] Definition of the project's problem area
+- [x] First layout conept
+- [ ] Project description
+- [ ] Tasks definition
+- [ ] Tasks assignment
+- [ ] First running build
+- [ ] Functionality testing
+- [ ] Deployment
+- [ ] Containerization
 
 ### Ideas
 
@@ -31,5 +31,7 @@
 - Allowing other file types than CSV.
 
 ## Tasks
+
+### Layout concept
 
 ![Layout conept](/layout_concpet.png)
