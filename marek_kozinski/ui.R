@@ -13,45 +13,110 @@ library(bslib)
 thematic::thematic_shiny()
 
 # Define UI for application that draws a histogram
-page_sidebar(
-    # Application title
-    # titlePanel("Visual Model bUIlding"),
-    titlePanel(
-      HTML("VISUAL MODEL </br>B<span style='font-size:150%; font-weight:bold;'>[UI]</span>LDING")
-    ),
-    # Sidebar with a slider input for number of bins
+# page_fluid(
+#   # Application title
+#   # titlePanel("Visual Model bUIlding"),
+  # theme = bs_theme(
+  #   bg = "#101010",
+  #   fg = "#FFF",
+  #   primary = "#E69F00",
+  #   secondary = "#0072B2",
+  #   success = "#009E73",
+  #   base_font = font_google("Inter"),
+  #   code_font = font_google("JetBrains Mono")
+  # ),
+#   lang = "en",
+#   titlePanel(
+#     HTML("VISUAL MODEL B<span style='font-size:150%; font-weight:bold;'>[UI]</span>LDING")
+#   ),
+#   # Sidebar with a slider input for number of bins
+#   layout_sidebar(
+#     sidebar = sidebarPanel(
+#             titlePanel(
+#               HTML("Sidebar")
+#             ),
+#             sliderInput("bins",
+#                         "Number of bins:",
+#                         min = 1,
+#                         max = 50,
+#                         value = 30
+#               ),
+#             # sliderInput("bins",
+#             #             "Number of bins:",
+#             #             min = 1,
+#             #             max = 50,
+#             #             value = 30
+#             #   ),
+#             width = 12,
+#             ),
+#     splitLayout(
+#       mainPanel(
+#         navset_underline(
+#           # title = "",
+#           nav_panel(
+#             title = "cokolwiek",
+#             column(plotOutput("distPlot"),
+#                    width = 6),
+#             column(titlePanel(HTML("Sidebar")),
+#                    width = 6)
+#           ),
+#           nav_panel(
+#             title = "cokolwiek2",
+#             #content
+#           ),
+#         ),
+#         width = 12,
+#       )
+#     )
+#   )
+# )
+
+#===============================================================================
+
+# first page
+page1 <- page_fluid(
+  theme = bs_theme(preset = "pulse"),
+  layout_sidebar(
     sidebar = sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30
-              ),
-              width = 12,
-            ),
-    mainPanel(
-      navset_card_tab(
-        # title = "",
-        nav_panel(
-          title = "cokolwiek",
-          plotOutput("distPlot")
-        ),
-        nav_panel(
-          title = "cokolwiek2",
-          
-        ),
+      sliderInput("bins2",
+                  "Number of bins:",
+                  min = 1,
+                  max = 50,
+                  value = 30
       ),
       width = 12,
     ),
-    
-    theme = bs_theme(
-      bg = "#101010",
-      fg = "#FFF",
-      primary = "#E69F00",
-      secondary = "#0072B2",
-      success = "#009E73",
-      base_font = font_google("Inter"),
-      code_font = font_google("JetBrains Mono")
-    ),
-    lang = "en",
+    plotOutput("distPlot2")
+  )
 )
+
+# page combined 
+page_navbar(
+  title = titlePanel(HTML("<ins>VISUAL MODEL </ins></br>&emsp;<ins>B</ins><span style='font-size:150%; font-weight:bold;'>[UI]</span><ins>LDING</ins>&emsp;&emsp;")),
+  theme = bs_theme(
+    # bg = "black",
+    # fg = "white",
+    # primary = "#E69F00",
+    # secondary = "#0072B2",
+    # success = "#009E73",
+    # base_font = font_google("Inter"),
+    # code_font = font_google("JetBrains Mono")
+    preset = "pulse"
+  ),
+  sidebar = sidebarPanel(
+    titlePanel(
+      HTML("Sidebar")
+    ),
+    sliderInput("bins",
+                "Number of bins:",
+                min = 1,
+                max = 50,
+                value = 30
+    ),
+    width = 12,
+  ),
+  nav_panel(title = titlePanel(HTML("<span style='font-size:80%; font-weight:bold;'>ONE</span>")), p(page1)),
+  nav_panel(title = titlePanel(HTML("<span style='font-size:80%; font-weight:bold;'>TWO</span>")), p("content"))
+)
+
+
