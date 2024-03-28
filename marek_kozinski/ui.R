@@ -90,9 +90,28 @@ page1 <- page_fluid(
   )
 )
 
+page2 <- page_fillable(
+  layout_columns(
+    card(titlePanel("Options"),
+         sliderInput("bins",
+                       "Number of bins:",
+                       min = 1,
+                       max = 50,
+                       value = 30
+    )),
+    card(plotOutput("distPlot")),
+    col_widths = c(2,10)
+  ),
+  theme = bs_theme(
+    preset = "pulse"
+  )
+)
+
 # page combined 
 page_navbar(
   title = titlePanel(HTML("<ins>VISUAL MODEL </ins></br>&emsp;<ins>B</ins><span style='font-size:150%; font-weight:bold;'>[UI]</span><ins>LDING</ins>&emsp;&emsp;")),
+  # tym steruje się tematem we wszsytkich page'ach
+  # osobno w np. page2 nie zmienia sie
   theme = bs_theme(
     # bg = "black",
     # fg = "white",
@@ -101,13 +120,16 @@ page_navbar(
     # success = "#009E73",
     # base_font = font_google("Inter"),
     # code_font = font_google("JetBrains Mono")
-    preset = "pulse"
+    preset = "pulse",
   ),
   sidebar = sidebarPanel(
     titlePanel(
       HTML("Sidebar")
     ),
-    sliderInput("bins",
+    fileInput("upload", "Upload a file"),
+    titlePanel((HTML("Summary"))),
+    #column(width = 12,tableOutput('table')),
+    sliderInput("bins3",
                 "Number of bins:",
                 min = 1,
                 max = 50,
@@ -115,8 +137,21 @@ page_navbar(
     ),
     width = 12,
   ),
+  # sidebar = sidebarPanel(
+  #     card(titlePanel(
+  #       HTML("Sidebar")
+  #     )),
+  #     card(fileInput("upload", "Upload a file")),
+  #     card(sliderInput("bins3",
+  #                      "Number of bins:",
+  #                      min = 1,
+  #                      max = 50,
+  #                      value = 30
+  #     )),
+  #     width = 12
+  # ),
   nav_panel(title = titlePanel(HTML("<span style='font-size:80%; font-weight:bold;'>ONE</span>")), p(page1)),
-  nav_panel(title = titlePanel(HTML("<span style='font-size:80%; font-weight:bold;'>TWO</span>")), p("content"))
+  nav_panel(title = titlePanel(HTML("<span style='font-size:80%; font-weight:bold;'>TWO</span>")), p(page2))
 )
 
 

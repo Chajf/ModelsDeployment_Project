@@ -36,5 +36,7 @@ function(input, output, session) {
            main = 'Histogram of waiting times')
       
     })
+    
+    output$table <- renderTable(iris[c(1,2),c(1,2)], options = list(scrollX=TRUE))
 
 }
