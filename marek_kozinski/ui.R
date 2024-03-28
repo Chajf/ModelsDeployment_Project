@@ -74,41 +74,98 @@ thematic::thematic_shiny()
 #===============================================================================
 
 # first page
-page1 <- page_fluid(
-  theme = bs_theme(preset = "pulse"),
-  layout_sidebar(
-    sidebar = sidebarPanel(
-      sliderInput("bins2",
-                  "Number of bins:",
-                  min = 1,
-                  max = 50,
-                  value = 30
-      ),
-      width = 12,
-    ),
-    plotOutput("distPlot2")
-  )
-)
+# page1 <- page_fillable(
+#   theme = bs_theme(preset = "pulse"),
+#   layout_sidebar(
+#     sidebar = sidebar(
+#       sliderInput("bins2",
+#                   "Number of bins:",
+#                   min = 1,
+#                   max = 50,
+#                   value = 30
+#       ),
+#       width = 300,
+#       open = "always",
+#     ),
+#     plotOutput("distPlot2")
+#   )
+# )
 
-page2 <- page_fillable(
-  layout_columns(
-    card(titlePanel("Options"),
-         sliderInput("bins",
-                       "Number of bins:",
-                       min = 1,
-                       max = 50,
-                       value = 30
-    )),
-    card(plotOutput("distPlot")),
-    col_widths = c(2,10)
+# page2 <- page_fillable(
+#   layout_columns(
+#     card(titlePanel("Options"),
+#          sliderInput("bins",
+#                        "Number of bins:",
+#                        min = 1,
+#                        max = 50,
+#                        value = 30
+#     )),
+#     card(plotOutput("distPlot")),
+#     col_widths = c(2,10)
+#   ),
+#   theme = bs_theme(
+#     preset = "pulse"
+#   )
+# )
+
+page1 <- page_fillable(
+  navset_card_tab(
+    title = "Histograms by species",
+    nav_panel("jeden", 
+              p(
+                layout_sidebar(
+                  sidebar = sidebar(
+                    sliderInput("bins2",
+                                "Number of bins:",
+                                min = 1,
+                                max = 50,
+                                value = 30
+                    ),
+                    width = 300,
+                    open = "always",
+                  ),
+                  plotOutput("distPlot2")
+                )
+              )),
+    nav_panel("dwa", "content"),
+    nav_panel("trzy", "content")
   ),
   theme = bs_theme(
     preset = "pulse"
   )
 )
 
+page2 <- page_fillable(
+  navset_card_underline(
+    title = "Histograms by species",
+    nav_panel("jeden", 
+              p(
+                layout_sidebar(
+                  sidebar = sidebar(
+                    sliderInput("bins",
+                                "Number of bins:",
+                                min = 1,
+                                max = 50,
+                                value = 30
+                    ),
+                    width = 300,
+                    open = "always",
+                  ),
+                  plotOutput("distPlot")
+                )
+              )),
+    nav_panel("dwa", "content"),
+    nav_panel("trzy", "content")
+  ),
+  theme = bs_theme(
+    preset = "pulse"
+  )
+)
+
+# bs_global_add_rules(HTML(".navbar .navbar-default .navbar-static-top {margin-bottom: 0px}"))
 # page combined 
 page_navbar(
+  # tags$head(tags$style(HTML(".navbar .navbar-default .navbar-static-top {margin-bottom: 0px}"))),
   title = titlePanel(HTML("<ins>VISUAL MODEL </ins></br>&emsp;<ins>B</ins><span style='font-size:150%; font-weight:bold;'>[UI]</span><ins>LDING</ins>&emsp;&emsp;")),
   # tym steruje się tematem we wszsytkich page'ach
   # osobno w np. page2 nie zmienia sie
@@ -122,7 +179,8 @@ page_navbar(
     # code_font = font_google("JetBrains Mono")
     preset = "pulse",
   ),
-  sidebar = sidebarPanel(
+  underline = TRUE,
+  sidebar = sidebar(
     titlePanel(
       HTML("Sidebar")
     ),
@@ -135,7 +193,8 @@ page_navbar(
                 max = 50,
                 value = 30
     ),
-    width = 12,
+    width = 365,
+    # open = "always",
   ),
   # sidebar = sidebarPanel(
   #     card(titlePanel(
@@ -150,8 +209,8 @@ page_navbar(
   #     )),
   #     width = 12
   # ),
-  nav_panel(title = titlePanel(HTML("<span style='font-size:80%; font-weight:bold;'>ONE</span>")), p(page1)),
-  nav_panel(title = titlePanel(HTML("<span style='font-size:80%; font-weight:bold;'>TWO</span>")), p(page2))
+  nav_panel(title = titlePanel(HTML("<span style='font-size:80%; font-weight:bold;'>DATA EXPLORATION</span>")), page1),
+  nav_panel(title = titlePanel(HTML("<span style='font-size:80%; font-weight:bold;'>MODELLING & RESULTS</span>")), page2)
 )
 
 
