@@ -166,7 +166,7 @@ page2 <- page_fillable(
 # page combined 
 page_navbar(
   # tags$head(tags$style(HTML(".navbar .navbar-default .navbar-static-top {margin-bottom: 0px}"))),
-  title = titlePanel(HTML("<ins>VISUAL MODEL </ins></br>&emsp;<ins>B</ins><span style='font-size:150%; font-weight:bold;'>[UI]</span><ins>LDING</ins>&emsp;&emsp;")),
+  title = HTML("<ins>VISUAL MODEL </ins></br>&emsp;<ins>B</ins><span style='font-size:150%; font-weight:bold;'>[UI]</span><ins>LDING</ins>&emsp;&emsp;"),
   # tym steruje się tematem we wszsytkich page'ach
   # osobno w np. page2 nie zmienia sie
   theme = bs_theme(
@@ -209,8 +209,8 @@ page_navbar(
   #     )),
   #     width = 12
   # ),
-  nav_panel(title = titlePanel(HTML("<span style='font-size:80%; font-weight:bold;'>DATA EXPLORATION</span>")), page1),
-  nav_panel(title = titlePanel(HTML("<span style='font-size:80%; font-weight:bold;'>MODELLING & RESULTS</span>")), page2)
+  nav_panel(title = HTML("<span style='font-size:80%; font-weight:bold;'>DATA EXPLORATION</span>"), page1),
+  nav_panel(title = HTML("<span style='font-size:80%; font-weight:bold;'>MODELLING & RESULTS</span>"), page2)
 )
 
 
