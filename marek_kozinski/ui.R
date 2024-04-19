@@ -9,6 +9,7 @@
 
 library(shiny)
 library(bslib)
+library(DT)
 
 thematic::thematic_shiny()
 
@@ -162,10 +163,36 @@ page2 <- page_fillable(
   )
 )
 
+sidebar_main <- sidebar(
+  # tags$head(
+  #   tags$style(
+  #     HTML("
+  #       .sidebar {
+  #         position: fixed;
+  #         # top: 0;
+  #         # left: 0;
+  #         # bottom: 0;
+  #         # width: 100px; /* Adjust as needed */
+  #         background-color: #f8f9fa; /* Sidebar background color */
+  #         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Optional shadow effect */
+  #       }
+  #     ")
+  #   )
+  # ),
+  titlePanel(HTML("Upload file")),
+  fileInput("upload", "Upload a .csv/.tsv file", accept = c(".csv",".tsv")),
+  titlePanel((HTML("Summary"))),
+  width = 365,
+  open = "desktop",
+  fillable = TRUE,
+  DTOutput("summ_table"),
+)
+
 # bs_global_add_rules(HTML(".navbar .navbar-default .navbar-static-top {margin-bottom: 0px}"))
 # page combined 
 page_navbar(
   # tags$head(tags$style(HTML(".navbar .navbar-default .navbar-static-top {margin-bottom: 0px}"))),
+  # tags$style(".content-wrapper{margin-left: 0px;}"),
   title = HTML("<ins>VISUAL MODEL </ins></br>&emsp;<ins>B</ins><span style='font-size:150%; font-weight:bold;'>[UI]</span><ins>LDING</ins>&emsp;&emsp;"),
   # tym steruje się tematem we wszsytkich page'ach
   # osobno w np. page2 nie zmienia sie
@@ -180,22 +207,7 @@ page_navbar(
     preset = "pulse",
   ),
   underline = TRUE,
-  sidebar = sidebar(
-    titlePanel(
-      HTML("Sidebar")
-    ),
-    fileInput("upload", "Upload a file"),
-    titlePanel((HTML("Summary"))),
-    #column(width = 12,tableOutput('table')),
-    sliderInput("bins3",
-                "Number of bins:",
-                min = 1,
-                max = 50,
-                value = 30
-    ),
-    width = 365,
-    # open = "always",
-  ),
+  sidebar = sidebar_main,
   # sidebar = sidebarPanel(
   #     card(titlePanel(
   #       HTML("Sidebar")
