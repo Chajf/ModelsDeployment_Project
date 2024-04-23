@@ -61,22 +61,6 @@ exploration <- page_fillable(
 page2 <- page_fillable(
   navset_card_underline(
     title = "Histograms by species",
-    # nav_panel("jeden", 
-    #           fluidPage(
-    #             layout_sidebar(
-    #               sidebar = sidebar(
-    #                 sliderInput("bins",
-    #                             "Number of bins:",
-    #                             min = 1,
-    #                             max = 50,
-    #                             value = 30
-    #                 ),
-    #                 width = 300,
-    #                 open = "always",
-    #               ),
-    #               plotOutput("distPlot")
-    #             )
-    #           )),
     nav_panel("dwa", "content"),
     nav_panel("trzy", "content")
   ),
