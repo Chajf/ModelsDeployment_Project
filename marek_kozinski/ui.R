@@ -44,7 +44,7 @@ tab3 <- "place_holder"
 
 exploration <- page_fillable(
   navset_card_underline(
-    title = "Data Exploration",
+    title = HTML("<span style='font-size:100%; font-weight:bold;'>Data Exploration</span>"),
     nav_panel("Imputation", tab1), # data imputation
     nav_panel("Variables", tab2), # data description, variable statistics
     nav_panel("Visualisation", tab3) # distributions, boxplots, dependecies 
@@ -120,8 +120,8 @@ page_navbar(
   underline = TRUE,
   sidebar = sidebar_main,
   padding = 0,
-  nav_panel(title = HTML("<span style='font-size:80%; font-weight:bold;'>DATA EXPLORATION</span>"), exploration),
-  nav_panel(title = HTML("<span style='font-size:80%; font-weight:bold;'>MODELLING & RESULTS</span>"), page2)
+  nav_panel(title = HTML("<span style='font-size:100%; font-weight:bold;'>DATA EXPLORATION</span>"), exploration),
+  nav_panel(title = HTML("<span style='font-size:100%; font-weight:bold;'>MODELLING & RESULTS</span>"), page2)
 )
 
 
