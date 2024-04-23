@@ -15,12 +15,7 @@ function(input, output, session) {
   
   data <- reactive({
     req(input$upload)
-    ext <- tools::file_ext(input$upload$name)
-    switch(ext,
-           csv = vroom::vroom(input$upload$datapath, delim = ","),
-           tsv = vroom::vroom(input$upload$datapath, delim = "\t"),
-           validate("Invalid file; Please upload a .csv or .tsv file")
-    )
+    read.csv(input$upload$datapath, sep = input$sep)
   })
   
   output$summ_table <- renderDT(
@@ -56,6 +51,50 @@ function(input, output, session) {
       
   })
     
-    output$table <- renderTable(iris[c(1,2),c(1,2)], options = list(scrollX=TRUE))
-
+  output$table <- renderTable(iris[c(1,2),c(1,2)], options = list(scrollX=TRUE))
+  
+  modifiedData <- reactiveValues(df = NULL)
+  
+  observe({
+    modifiedData$df <- data()
+  })
+  
+  output$varSelect <- renderUI({
+    df <- data()
+    lapply(names(df), function(name){
+      tagList(
+        selectInput(inputId = name, 
+                    label = paste("Choose a type for variable:", name), 
+                    choices = c("Numeric", "Character", "Logical")),
+        htmlOutput(paste0(name, "_error"))
+      )
+    })
+  })
+  
+  observe({
+    lapply(names(data()), function(name){
+      observeEvent(input[[name]], {
+        tryCatch({
+          if(input[[name]] == "Numeric") {
+            modifiedData$df[[name]] <<- as.numeric(modifiedData$df[[name]])
+          } else if(input[[name]] == "Character") {
+            modifiedData$df[[name]] <<- as.character(modifiedData$df[[name]])
+          } else if(input[[name]] == "Logical") {
+            modifiedData$df[[name]] <<- as.logical(modifiedData$df[[name]])
+          }
+          output[[paste0(name, "_error")]] <-  renderUI({
+            tags$span(style = "color: green;", "Done: Conversion successful!")
+          })
+        }, warning = function(w) {
+          output[[paste0(name, "_error")]] <- renderUI({
+            tags$span(style = "color: orange;", paste("Warning: Cannot convert variable", name, "to type", input[[name]], "- ", w$message))
+          })
+        }, error = function(e) {
+          output[[paste0(name, "_error")]] <- renderUI({
+            tags$span(style = "color: red;", paste("Error: Cannot convert variable", name, "to type", input[[name]], "- ", e$message))
+          })
+        })
+      })
+    })
+  })
 }

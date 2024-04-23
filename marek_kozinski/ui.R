@@ -180,12 +180,16 @@ sidebar_main <- sidebar(
   #   )
   # ),
   titlePanel(HTML("Upload file")),
-  fileInput("upload", "Upload a .csv/.tsv file", accept = c(".csv",".tsv")),
+  fileInput("upload", "Upload a .csv/.tsv file", accept = c(".csv",".tsv"), multiple = FALSE),
+  selectInput("sep", "Choose the separator:",
+              choices = c("Comma" = ",", "Semicolon" = ";", "Tab" = "\t")),
   titlePanel((HTML("Summary"))),
   width = 365,
   open = "desktop",
   fillable = TRUE,
   DTOutput("summ_table"),
+  titlePanel(HTML("Variables types")),
+  uiOutput("varSelect"),
 )
 
 # bs_global_add_rules(HTML(".navbar .navbar-default .navbar-static-top {margin-bottom: 0px}"))
