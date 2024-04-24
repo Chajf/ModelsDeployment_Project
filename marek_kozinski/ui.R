@@ -1,6 +1,7 @@
 library(shiny)
 library(bslib)
 library(DT)
+library(plotly)
 
 thematic::thematic_shiny()
 
@@ -43,20 +44,26 @@ tab1 <- fillPage(
 
 # Tab 2
 
-tab2 <- fluidPage(
-  layout_sidebar(
-    sidebar = sidebar(
-      sliderInput("bins",
-                  "Number of bins:",
-                  min = 1,
-                  max = 50,
-                  value = 30
-      ),
-      width = 300,
-      open = "open",
-    ),
-    plotOutput("distPlot")
-  )
+tab2 <- fillPage(
+  tags$style(HTML("
+    .container-fluid {
+      max-width: 100%;
+    }
+    #variables_plots_div {
+      overflow-x: auto;
+      overflow-y: auto;
+      margin-left: 20px;
+      margin-right: 20px;
+    }
+    #variables_title {
+      margin-left: 20px;
+      margin-top: 10px;
+    }
+  ")),
+  div(id = "variables_title", titlePanel(HTML("Variables"))),
+  div(id = "variables_plots_div", 
+      selectInput("variables", "Select variables (max 2)", choices = "First load some data", multiple = TRUE),
+      plotlyOutput("variables_plot")),
 )
 
 

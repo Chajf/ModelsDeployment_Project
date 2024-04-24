@@ -1,19 +1,24 @@
 library(shiny)
 library(DT)
+library(plotly)
 
 # Define server logic required to draw a histogram
 function(input, output, session) {
   
   data <- reactive({
     req(input$upload)
-    read.csv(input$upload$datapath, sep = input$sep)
+    df <- read.csv(input$upload$datapath, sep = input$sep)
+    updateSelectInput(session, "variables", choices = names(df))  # Update the selectInput here
+    df
   })
   
   modifiedData <- reactiveValues(df = NULL)
   
   observe({
     modifiedData$df <- data()
+    # updateSelectInput(session, "variables", choices = names(df))
   })
+  
   
   output$summ_table <- renderDT(
     data.frame(
@@ -130,5 +135,53 @@ function(input, output, session) {
     })
   })
   
-  
+  # Render the plot based on the selected variables
+  output$variables_plot <- renderPlotly({
+    req(input$variables, data())
+    df <- modifiedData$df
+    
+    # If one variable is selected
+    if(length(input$variables) == 1) {
+      var <- df[[input$variables]]
+      var_name <- input$variables
+      
+      # If the variable is numeric, plot a histogram and density plot
+      if(is.numeric(var)) {
+        p <- plot_ly(df, x = ~var, type = "histogram", histnorm = "probability", name = "Histogram") %>%
+          add_trace(y = ~density(var)$y, x = ~density(var)$x, type = "scatter", mode = "lines", name = "Density") %>%
+          layout(xaxis = list(title = var_name))
+        p
+      } else {  # If the variable is not numeric, plot a bar chart
+        p <- plot_ly(df, x = ~var, type = "histogram", name = "Histogram") %>%
+          layout(xaxis = list(title = var_name))
+        p
+      }
+      
+    } else if(length(input$variables) == 2) {  # If two variables are selected
+      var1 <- df[[input$variables[1]]]
+      var2 <- df[[input$variables[2]]]
+      var1_name <- input$variables[1]
+      var2_name <- input$variables[2]
+      
+      # If one variable is numeric and the other is not, plot a boxplot
+      if(is.numeric(var1) && !is.numeric(var2)) {
+        p <- plot_ly(df, y = ~var1, color = ~var2, type = "box") %>%
+          layout(yaxis = list(title = var1_name), xaxis = list(title = var2_name))
+        p
+      } else if(!is.numeric(var1) && is.numeric(var2)) {
+        p <- plot_ly(df, y = ~var2, color = ~var1, type = "box") %>%
+          layout(yaxis = list(title = var2_name), xaxis = list(title = var1_name))
+        p
+      } else if(is.numeric(var1) && is.numeric(var2)) {  # If both variables are numeric, plot a scatter plot
+        p <- plot_ly(df, x = ~var1, y = ~var2, mode = "markers") %>%
+          layout(xaxis = list(title = var1_name), yaxis = list(title = var2_name))
+        p
+      } else {  # If not both variables are numeric, show a warning message
+        showModal(modalDialog(
+          title = "Warning",
+          "At least one variable needs to be numeric for creating plot."
+        ))
+      }
+    }
+  })
 }
