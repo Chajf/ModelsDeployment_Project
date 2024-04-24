@@ -10,7 +10,40 @@ thematic::thematic_shiny()
 
 # Tab 1
 
-tab1 <- fluidPage(
+tab1 <- fillPage(
+  tags$style(HTML("
+    .container-fluid {
+      max-width: 100%;
+    }
+    #df_table_div {
+      overflow-x: auto;
+      overflow-y: auto;
+      margin-left: 20px;
+      margin-right: 20px;
+    }
+    #data_title {
+      margin-left: 20px;
+      margin-top: 10px;
+    }
+  ")),
+  layout_sidebar(
+    sidebar = sidebar(
+      titlePanel(HTML("Imputation")),
+      width = 500,
+      open = "closed",
+      DTOutput("missing_values"),
+      uiOutput("imputation"),
+    ),
+    fillable = T,
+    fill = T,
+    div(id = "data_title", titlePanel(HTML("Data"))),
+    div(id = "df_table_div", DTOutput("df_table")),
+  )
+)
+
+# Tab 2
+
+tab2 <- fluidPage(
   layout_sidebar(
     sidebar = sidebar(
       sliderInput("bins",
@@ -28,15 +61,14 @@ tab1 <- fluidPage(
 
 
 
-# Tab 2
-
-tab2 <- "place_holder"
-
-
-
 # Tab 3
 
 tab3 <- "place_holder"
+
+
+# Tab 4
+
+tab4 <- "place_holder"
 
 
 
@@ -45,7 +77,7 @@ tab3 <- "place_holder"
 exploration <- page_fillable(
   navset_card_underline(
     title = HTML("<span style='font-size:100%; font-weight:bold;'>Data Exploration</span>"),
-    nav_panel("Imputation", tab1), # data imputation
+    nav_panel("Data", tab1), # data browse and imputation
     nav_panel("Variables", tab2), # data description, variable statistics
     nav_panel("Visualisation", tab3) # distributions, boxplots, dependecies 
   ),
