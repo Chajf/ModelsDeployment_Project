@@ -63,17 +63,28 @@ tab_m1 <- fluidPage(
     sidebar = sidebar(
       titlePanel("Model target"),
       uiOutput("target_var_ui"),
-      checkboxGroupInput("preproc",
-                         "Steps to add",
-                         choices = c("Normalize","Dummy variables","PCA",
-                                     "Remove zero variance", "Remove near zero variance",
-                                     "Logarythm transform", "Class other", "Square root transform")),
-      uiOutput("inputs"),
+      titlePanel("Preprocessing steps"),
+      checkboxInput("normalize", "Normalize"),
+      checkboxInput("dummy", "Dummy variables"),
+      checkboxInput("pca", "PCA"),
+      conditionalPanel(condition = "input.pca == true", uiOutput("pca_ui")),
+      checkboxInput("remove_zero_var", "Remove zero variance"),
+      checkboxInput("remove_near_zero_var", "Remove near zero variance"),
+      checkboxInput("log_transform", "Logarythm transform"),
+      conditionalPanel(condition = "input.log_transform == true", uiOutput("transforms_ui")),
+      checkboxInput("class_other", "Class other"),
+      conditionalPanel(condition = "input.class_other == true", uiOutput("class_other_ui")),
+      checkboxInput("sqrt_transform", "Square root transform"),
+      titlePanel("Model selection"),
+      selectInput("model_select","Model",
+                  choices = c("Decision Tree","XGBoost","Random Forest","SVM")),
       width = 300,
       open = "open",
     ),
+    titlePanel("Model building summary"),
     uiOutput("v_box"),
-    uiOutput("type")
+    uiOutput("type"),
+    uiOutput("pre_steps")
   )
 )
 

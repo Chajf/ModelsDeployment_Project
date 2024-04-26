@@ -106,32 +106,49 @@ function(input, output, session) {
               showcase = bs_icon(icon))
   })
   
-  output$inputs <- renderUI({
-    req(input$preproc)
-    lapply(input$preproc, function(i) {
-      if (i == "PCA") {
-        sliderInput("pca_comp",
-                    "Number of components",
-                    min = 2,
-                    max = ncol(modifiedData$df),
-                    value = round(ncol(modifiedData$df)/2),
-                    step = 1
-        )
-      } else if (i == "Class other") {
-        sliderInput("other",
-                    "Threshold",
-                    min = 0.01,
-                    max = 0.95,
-                    value = 0.15
-        )
-      } else if (i %in% c("Logarythm transform", "Square root transform")) {
-        numeric_vars <- names(modifiedData$df)[sapply(modifiedData$df, is.numeric)]
-        selectizeInput(paste0("select_", gsub(" ", "_", i)),
-                       paste0("Select variables for ", i),
-                       choices = numeric_vars,
-                       multiple = TRUE
-        )
-      }
-    })
+  output$pre_steps <- renderUI({
+    selected_checkboxes <- sum(c(input$normalize, input$dummy, input$pca, input$remove_zero_var, 
+                                 input$remove_near_zero_var, input$log_transform, input$class_other, 
+                                 input$sqrt_transform), na.rm = TRUE)
+    value_box(title = "Preprocessing steps",
+      value = selected_checkboxes,
+      icon = icon("check-square"),
+      color = "blue"
+    )
   })
+  
+  output$pca_ui <- renderUI({
+    if (input$pca) {
+      sliderInput("pca_comp",
+                  "Number of components",
+                  min = 2,
+                  max = ncol(modifiedData$df),
+                  value = round(ncol(modifiedData$df)/2),
+                  step = 1
+      )
+    }
+  })
+  
+  output$class_other_ui <- renderUI({
+    if (input$class_other) {
+      sliderInput("other",
+                  "Threshold",
+                  min = 0.01,
+                  max = 0.95,
+                  value = 0.15
+      )
+    }
+  })
+  
+  output$transforms_ui <- renderUI({
+    if (input$log_transform) {
+      numeric_vars <- names(modifiedData$df)[sapply(modifiedData$df, is.numeric)]
+      selectizeInput("select_log",
+                     "Select variables for log trasform",
+                     choices = numeric_vars,
+                     multiple = TRUE
+      )
+    }
+  })
+
 }
