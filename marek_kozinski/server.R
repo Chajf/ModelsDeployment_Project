@@ -98,6 +98,7 @@ function(input, output, session) {
   })
   
   output$type <- renderUI({
+    req(input$target_var)
     col <- input$target_var
     type <- ifelse(sapply(modifiedData$df[col],class)=="numeric","Regression","Classification")
     icon <- ifelse(type=="Regression","graph-up","bullseye")
@@ -116,6 +117,7 @@ function(input, output, session) {
       color = "blue"
     )
   })
+  
   
   output$pca_ui <- renderUI({
     if (input$pca) {
@@ -149,6 +151,17 @@ function(input, output, session) {
                      multiple = TRUE
       )
     }
+  })
+  
+  output$train_size <- renderUI({
+    req(modifiedData$df)
+    value_box(title = "Train set size",
+              value = paste0(input$split*100, "% (",round(nrow(modifiedData$df)*input$split),")"))
+  })
+  
+  output$model_select <- renderUI({
+    value_box(title = "Model selected",
+              value = input$model_select)
   })
 
 }

@@ -63,6 +63,11 @@ tab_m1 <- fluidPage(
     sidebar = sidebar(
       titlePanel("Model target"),
       uiOutput("target_var_ui"),
+      titlePanel("Model selection"),
+      selectInput("model_select","Model",
+                  choices = c("Decision Tree","XGBoost","Random Forest","SVM")),
+      titlePanel("Dataset split"),
+      sliderInput("split","Train size", min = 0.1, max = 0.95, step = 0.01, value = 0.8),
       titlePanel("Preprocessing steps"),
       checkboxInput("normalize", "Normalize"),
       checkboxInput("dummy", "Dummy variables"),
@@ -75,14 +80,13 @@ tab_m1 <- fluidPage(
       checkboxInput("class_other", "Class other"),
       conditionalPanel(condition = "input.class_other == true", uiOutput("class_other_ui")),
       checkboxInput("sqrt_transform", "Square root transform"),
-      titlePanel("Model selection"),
-      selectInput("model_select","Model",
-                  choices = c("Decision Tree","XGBoost","Random Forest","SVM")),
       width = 300,
       open = "open",
     ),
     titlePanel("Model building summary"),
     uiOutput("v_box"),
+    uiOutput("model_select"),
+    uiOutput("train_size"),
     uiOutput("type"),
     uiOutput("pre_steps")
   )
