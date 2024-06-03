@@ -88,7 +88,10 @@ tab_m1 <- fluidPage(
     uiOutput("model_select"),
     uiOutput("train_size"),
     uiOutput("type"),
-    uiOutput("pre_steps")
+    uiOutput("pre_steps"),
+    actionButton("train_model", "Train Model"),
+    tableOutput("model_summary"),
+    tableOutput("model_pred")
   )
 )
 

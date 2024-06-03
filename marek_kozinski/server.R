@@ -1,6 +1,12 @@
 library(shiny)
 library(DT)
 library(bsicons)
+library(LiblineaR)
+library(shinymodels)
+library(tidymodels)
+
+tidymodels_prefer()
+conflicted::conflicts_prefer(shiny::observe)
 
 # Define server logic required to draw a histogram
 function(input, output, session) {
@@ -163,5 +169,101 @@ function(input, output, session) {
     value_box(title = "Model selected",
               value = input$model_select)
   })
+  
+  model_fit <- eventReactive(input$train_model, {
+    
+    switch(input$model_select,
+           "Decision Tree"={
+             if (sapply(modifiedData$df[input$target_var],class)=="numeric"){
+               model_spec <- decision_tree(mode = "regression")
+             }
+             else {
+               model_spec <- decision_tree(mode = "classification")
+             }
+             
+           },
+           "XGBoost"={
+             if (sapply(modifiedData$df[input$target_var],class)=="numeric"){
+               model_spec <- boost_tree(mode = "regression")
+             }
+             else {
+               model_spec <- boost_tree(mode = "classification")
+             }
+           },
+           "Random Forest"={
+             if (sapply(modifiedData$df[input$target_var],class)=="numeric"){
+               model_spec <- rand_forest(mode = "regression")
+             }
+             else {
+               model_spec <- rand_forest(mode = "classification")
+             }
+           },
+           "SVM"={
+             if (sapply(modifiedData$df[input$target_var],class)=="numeric"){
+               model_spec <- svm_linear(mode = "regression")
+             }
+             else {
+               model_spec <- svm_linear(mode = "classification")
+             }
+           })
 
+    rec <- recipe(as.formula(paste(input$target_var, "~ .")), data = modifiedData$df)
+
+    if (input$dummy){
+      rec <- rec %>% 
+        step_dummy(all_string_predictors())
+    }
+    
+    if (input$pca){
+      rec <- rec %>% 
+        step_pca(all_numeric_predictors(),num_comp = input$pca_comp)
+    }
+    
+    if (input$normalize){
+      rec <- rec %>% 
+        step_normalize(all_numeric_predictors())
+    }
+    
+    if (input$remove_zero_var){
+      rec <- rec %>% 
+        step_zv(all_numeric_predictors())
+    }
+    
+    if (input$remove_near_zero_var){
+      rec <- rec %>% 
+        step_nzv(all_numeric_predictors())
+    }
+    
+    if (input$log_transform){
+      rec <- rec %>% 
+        step_log(input$select_log)
+    }
+    
+    if (input$sqrt_transform){
+      rec <- rec %>% 
+        step_sqrt(all_numeric_predictors())
+    }
+    
+    if (input$class_other){
+      rec <- rec %>% 
+        step_other(all_string_predictors(), threshold = input$other)
+    }
+
+    wf <- workflow() %>%
+      add_model(model_spec) %>%
+      add_recipe(rec)
+
+    fit(wf, data = modifiedData$df)
+  })
+
+  output$model_summary <- renderTable({
+    req(model_fit())
+    summary(model_fit())
+  })
+  
+  output$model_pred <- renderTable({
+    req(model_fit())
+    predict(model_fit(), modifiedData$df)
+  })
+  
 }
