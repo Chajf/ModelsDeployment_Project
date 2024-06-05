@@ -1,14 +1,17 @@
 library(shiny)
 library(DT)
 library(plotly)
+library(psych)
+library(dplyr)
 
 # Define server logic required to draw a histogram
 function(input, output, session) {
   
   data <- reactive({
     req(input$upload)
-    df <- read.csv(input$upload$datapath, sep = input$sep)
-    updateSelectInput(session, "variables", choices = names(df))  # Update the selectInput here
+    df <- read.csv(input$upload$datapath, sep = input$sep, header = input$header, dec = if(input$sep == ";") "," else ".")
+    # updateSelectInput(session, "summ_variable", choices = names(df))  # Update the selectInput here
+    updateSelectInput(session, "variables_vis", choices = names(df))  # Update the selectInput here
     df
   })
   
@@ -96,14 +99,14 @@ function(input, output, session) {
     })
   })
   
-  output$missing_values <- renderDT({
-    req(data())
-    df <- modifiedData$df 
-    missing_values <- df %>%
-      dplyr::summarise_all(function(x) sum(is.na(x))) %>%
-      tidyr::gather(key = "Variable", value = "Number of Missing Values")
-    DT::datatable(missing_values, options = list(dom = 't'), rownames = FALSE)
-  })
+  # output$missing_values <- renderDT({
+  #   req(data())
+  #   df <- modifiedData$df 
+  #   missing_values <- df %>%
+  #     dplyr::summarise_all(function(x) sum(is.na(x))) %>%
+  #     tidyr::gather(key = "Variable", value = "Number of Missing Values")
+  #   DT::datatable(missing_values, options = list(dom = 't'), rownames = FALSE)
+  # })
   
   output$imputation <- renderUI({
     df <- modifiedData$df 
@@ -135,21 +138,93 @@ function(input, output, session) {
     })
   })
   
+  # Define the function to calculate statistics
+  calculate_dataframe_statistics <- function(df) {
+    
+    # Function to calculate statistics for numerical variables
+    calculate_numeric_stats <- function(x, var_name) {
+      stats <- data.frame(
+        Variable = var_name,
+        Mean = round(mean(x, na.rm = TRUE), 3),
+        Median = round(median(x, na.rm = TRUE), 3),
+        Std_Dev = round(sd(x, na.rm = TRUE), 3),
+        Variance = round(var(x, na.rm = TRUE), 3),
+        Min = round(min(x, na.rm = TRUE), 3),
+        Max = round(max(x, na.rm = TRUE), 3),
+        Skewness = round(psych::skew(x, na.rm = TRUE), 3),
+        Kurtosis = round(psych::kurtosi(x, na.rm = TRUE), 3)
+      )
+      return(stats)
+    }
+    
+    # Function to calculate statistics for character variables
+    calculate_character_stats <- function(x, var_name) {
+      value_counts <- sort(table(x), decreasing = TRUE)
+      most_common_values <- names(value_counts)[1:min(5, length(value_counts))]
+      most_common_counts <- as.numeric(value_counts[1:min(5, length(value_counts))])
+      most_common <- paste(most_common_values, "(", most_common_counts, ")", sep = "", collapse = ", ")
+      
+      stats <- data.frame(
+        Variable = var_name,
+        Count = length(x),
+        Mode = most_common_values[1],
+        Unique_Values = length(unique(x)),
+        Most_Common = most_common
+      )
+      return(stats)
+    }
+    
+    # Separate numeric and character variables
+    numeric_vars <- df %>% select(where(is.numeric))
+    character_vars <- df %>% select(where(is.character))
+    
+    # Apply the statistics calculation function to each variable
+    numeric_stats <- lapply(names(numeric_vars), function(var) {
+      calculate_numeric_stats(numeric_vars[[var]], var)
+    })
+    character_stats <- lapply(names(character_vars), function(var) {
+      calculate_character_stats(character_vars[[var]], var)
+    })
+    
+    # Combine the results into dataframes
+    numeric_result_df <- bind_rows(numeric_stats)
+    character_result_df <- bind_rows(character_stats)
+    
+    return(list(numeric = numeric_result_df, character = character_result_df))
+  }
+  
+  output$numeric_var_table <- renderDT({
+    req(data())
+    df <- modifiedData$df
+    result_df <- calculate_dataframe_statistics(df)
+    datatable(result_df$numeric)
+  })
+  
+  output$character_var_table  <- renderDT({
+    req(data())
+    df <- modifiedData$df
+    result_df <- calculate_dataframe_statistics(df)
+    datatable(result_df$character)
+  })
+  
+  
   # Render the plot based on the selected variables
-  output$variables_plot <- renderPlotly({
-    req(input$variables, data())
+  output$visualisation_plot <- renderPlotly({
+    req(input$variables_vis, data())
     df <- modifiedData$df
     
     # If one variable is selected
-    if(length(input$variables) == 1) {
-      var <- df[[input$variables]]
-      var_name <- input$variables
+    if(length(input$variables_vis) == 1) {
+      var <- df[[input$variables_vis]]
+      var_name <- input$variables_vis
       
       # If the variable is numeric, plot a histogram and density plot
       if(is.numeric(var)) {
-        p <- plot_ly(df, x = ~var, type = "histogram", histnorm = "probability", name = "Histogram") %>%
-          add_trace(y = ~density(var)$y, x = ~density(var)$x, type = "scatter", mode = "lines", name = "Density") %>%
-          layout(xaxis = list(title = var_name))
+        p <- plot_ly(df, x = ~var, type = "histogram",  name = "Histogram") %>%
+          add_trace(y = ~density(var)$y / sum(density(var)$y), x = ~density(var)$x, type = "scatter", mode = "lines", name = "Density", yaxis = "y2") %>%
+          layout(xaxis = list(title = var_name),
+                 yaxis = list(title = paste0("count",var_name), range = c(0,NA)),
+                 yaxis2 = list(overlaying = "y", side = "right", title = "Density", range = c(0,NA)))
         p
       } else {  # If the variable is not numeric, plot a bar chart
         p <- plot_ly(df, x = ~var, type = "histogram", name = "Histogram") %>%
@@ -157,11 +232,11 @@ function(input, output, session) {
         p
       }
       
-    } else if(length(input$variables) == 2) {  # If two variables are selected
-      var1 <- df[[input$variables[1]]]
-      var2 <- df[[input$variables[2]]]
-      var1_name <- input$variables[1]
-      var2_name <- input$variables[2]
+    } else if(length(input$variables_vis) == 2) {  # If two variables are selected
+      var1 <- df[[input$variables_vis[1]]]
+      var2 <- df[[input$variables_vis[2]]]
+      var1_name <- input$variables_vis[1]
+      var2_name <- input$variables_vis[2]
       
       # If one variable is numeric and the other is not, plot a boxplot
       if(is.numeric(var1) && !is.numeric(var2)) {
@@ -185,3 +260,5 @@ function(input, output, session) {
     }
   })
 }
+
+
