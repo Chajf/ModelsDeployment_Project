@@ -99,6 +99,7 @@ function(input, output, session) {
   })
   
   output$v_box <- renderUI({
+    req(input$target_var)
     value_box(title = "Target variable",
               value = input$target_var)
   })
@@ -170,6 +171,10 @@ function(input, output, session) {
               value = input$model_select)
   })
   
+  data_split <- eventReactive(input$train_model, {
+    initial_split(modifiedData$df, prop = input$split)
+  })
+  
   model_fit <- eventReactive(input$train_model, {
     
     switch(input$model_select,
@@ -207,16 +212,11 @@ function(input, output, session) {
              }
            })
 
-    rec <- recipe(as.formula(paste(input$target_var, "~ .")), data = modifiedData$df)
+    rec <- recipe(as.formula(paste(input$target_var, "~ .")), data = training(data_split()))
 
     if (input$dummy){
       rec <- rec %>% 
         step_dummy(all_string_predictors())
-    }
-    
-    if (input$pca){
-      rec <- rec %>% 
-        step_pca(all_numeric_predictors(),num_comp = input$pca_comp)
     }
     
     if (input$normalize){
@@ -248,6 +248,11 @@ function(input, output, session) {
       rec <- rec %>% 
         step_other(all_string_predictors(), threshold = input$other)
     }
+    
+    if (input$pca){
+      rec <- rec %>% 
+        step_pca(all_numeric_predictors(),num_comp = input$pca_comp)
+    }
 
     wf <- workflow() %>%
       add_model(model_spec) %>%
@@ -255,15 +260,23 @@ function(input, output, session) {
 
     fit(wf, data = modifiedData$df)
   })
+  
+  output$build_result <- renderUI({
+    req(model_fit())
+    HTML('<span style="color: green; font-size: 16px; font-weight: bold; margin-top: 10px; display: flex; align-items: center;">
+           <span style="margin-right: 8px; font-size: 20px;">&#10004;</span> Model built successfully
+         </span>')
+  })
 
   output$model_summary <- renderTable({
     req(model_fit())
     summary(model_fit())
   })
   
-  output$model_pred <- renderTable({
+  output$model_pred <- DT::renderDataTable({
     req(model_fit())
-    predict(model_fit(), modifiedData$df)
+    pred <- predict(model_fit(), testing(data_split()))
+    cbind(testing(data_split()), pred)
   })
   
 }

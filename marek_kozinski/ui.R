@@ -90,16 +90,22 @@ tab_m1 <- fluidPage(
     uiOutput("type"),
     uiOutput("pre_steps"),
     actionButton("train_model", "Train Model"),
-    tableOutput("model_summary"),
-    tableOutput("model_pred")
+    htmlOutput("build_result")
   )
+)
+
+tab_m2 <- fluidPage(
+    titlePanel("Model predictions"),
+    #tableOutput("model_summary"),
+    DT::dataTableOutput("model_pred"),
+    titlePanel("Metrics summary")
 )
 
 page2 <- page_fillable(
   navset_card_underline(
     title = "Model Building",
     nav_panel("Building", tab_m1),
-    nav_panel("Results", "content")
+    nav_panel("Results", tab_m2)
   ),
   theme = bs_theme(
     preset = "pulse"
