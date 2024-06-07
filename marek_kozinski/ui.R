@@ -95,10 +95,24 @@ tab_m1 <- fluidPage(
 )
 
 tab_m2 <- fluidPage(
-    titlePanel("Model predictions"),
     #tableOutput("model_summary"),
+    div(class = "centered-table", titlePanel("Metrics summary")),
+    tags$head(
+      tags$style(HTML("
+      .centered-table {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .dataTables_wrapper {
+        width: auto !important;
+        margin: 0 auto !important;
+      }
+    "))
+    ),
+    div(class = "centered-table", tableOutput("model_mets")),
+    titlePanel("Model predictions"),
     DT::dataTableOutput("model_pred"),
-    titlePanel("Metrics summary")
 )
 
 page2 <- page_fillable(

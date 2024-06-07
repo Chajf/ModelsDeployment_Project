@@ -279,4 +279,27 @@ function(input, output, session) {
     cbind(testing(data_split()), pred)
   })
   
+  output$model_mets <- renderTable({
+    req(model_fit())
+    pred_test <- predict(model_fit(), testing(data_split()))
+    pred_train <- predict(model_fit(), training(data_split()))
+    pred_train_df <- cbind(training(data_split()),".pred"=pred_train)
+    pred_test_df <- cbind(testing(data_split()),".pred"=pred_test)
+    target <- input$target_var
+    met1 <- rmse(pred_train_df, truth = !!sym(target), estimate = ".pred")
+    met2 <- mae(pred_train_df, truth = !!sym(target), estimate = ".pred")
+    met3 <- rsq(pred_train_df, truth = !!sym(target), estimate = ".pred")
+    mets <- rbind(met1,met2,met3)
+    mets
+    # names(mets)[names(mets) == '.estimate'] <- 'train_score'
+    # names(mets)[names(mets) == '.metric'] <- 'metric'
+    names(mets) <- c("metric",".estimator","train_score")
+    met1 <- rmse(pred_test_df, truth = !!sym(target), estimate = ".pred")
+    met2 <- mae(pred_test_df, truth = !!sym(target), estimate = ".pred")
+    met3 <- rsq(pred_test_df, truth = !!sym(target), estimate = ".pred")
+    mets_placeholder <- rbind(met1,met2,met3)
+    #names(mets_placeholder)[names(mets_placeholder) == '.estimate'] <- 'test'
+    cbind(mets, "test_score" = mets_placeholder$".estimate") %>% 
+      select(-".estimator")
+  })
 }
