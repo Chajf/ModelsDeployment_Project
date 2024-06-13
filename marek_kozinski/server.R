@@ -175,7 +175,26 @@ function(input, output, session) {
     initial_split(modifiedData$df, prop = input$split)
   })
   
+  dummy_model <- function(input_model, input_dummy) {
+    if ((input_model == "XGBoost" || input_model == "SVM") && input_dummy == F) {
+      "This model need 'Dummy Variable' preprocessing step"
+    } else {
+      NULL
+    }
+  }
+  
+  req_data <- function(input) {
+    if (!is.data.frame(input)) {
+      "Provide data"
+    } else {
+      NULL
+    }
+  }
+  
   model_fit <- eventReactive(input$train_model, {
+    
+    validate(req_data(modifiedData$df))
+    validate(dummy_model(input$model_select, input$dummy))
     
     switch(input$model_select,
            "Decision Tree"={
@@ -276,30 +295,65 @@ function(input, output, session) {
   output$model_pred <- DT::renderDataTable({
     req(model_fit())
     pred <- predict(model_fit(), testing(data_split()))
-    cbind(testing(data_split()), pred)
+    pred_full <- cbind(testing(data_split()), pred)
+    DT::datatable(pred_full, options = list(scrollX = TRUE))
   })
   
   output$model_mets <- renderTable({
     req(model_fit())
-    pred_test <- predict(model_fit(), testing(data_split()))
-    pred_train <- predict(model_fit(), training(data_split()))
-    pred_train_df <- cbind(training(data_split()),".pred"=pred_train)
-    pred_test_df <- cbind(testing(data_split()),".pred"=pred_test)
-    target <- input$target_var
-    met1 <- rmse(pred_train_df, truth = !!sym(target), estimate = ".pred")
-    met2 <- mae(pred_train_df, truth = !!sym(target), estimate = ".pred")
-    met3 <- rsq(pred_train_df, truth = !!sym(target), estimate = ".pred")
-    mets <- rbind(met1,met2,met3)
-    mets
-    # names(mets)[names(mets) == '.estimate'] <- 'train_score'
-    # names(mets)[names(mets) == '.metric'] <- 'metric'
-    names(mets) <- c("metric",".estimator","train_score")
-    met1 <- rmse(pred_test_df, truth = !!sym(target), estimate = ".pred")
-    met2 <- mae(pred_test_df, truth = !!sym(target), estimate = ".pred")
-    met3 <- rsq(pred_test_df, truth = !!sym(target), estimate = ".pred")
-    mets_placeholder <- rbind(met1,met2,met3)
-    #names(mets_placeholder)[names(mets_placeholder) == '.estimate'] <- 'test'
-    cbind(mets, "test_score" = mets_placeholder$".estimate") %>% 
-      select(-".estimator")
+    if (sapply(modifiedData$df[input$target_var],class)=="numeric"){
+      pred_test <- predict(model_fit(), testing(data_split()))
+      pred_train <- predict(model_fit(), training(data_split()))
+      
+      pred_train_df <- cbind(training(data_split()),".pred"=pred_train)
+      pred_test_df <- cbind(testing(data_split()),".pred"=pred_test)
+      
+      target <- input$target_var
+      
+      met1_train <- rmse(pred_train_df, truth = !!sym(target), estimate = ".pred")
+      met2_train <- mae(pred_train_df, truth = !!sym(target), estimate = ".pred")
+      met3_train <- rsq(pred_train_df, truth = !!sym(target), estimate = ".pred")
+      mets_train <- rbind(met1_train,met2_train,met3_train)
+      names(mets_train) <- c("metric",".estimator","train_score")
+      
+      met1_test <- rmse(pred_test_df, truth = !!sym(target), estimate = ".pred")
+      met2_test <- mae(pred_test_df, truth = !!sym(target), estimate = ".pred")
+      met3_test <- rsq(pred_test_df, truth = !!sym(target), estimate = ".pred")
+      mets_test <- rbind(met1_test,met2_test,met3_test)
+
+      mets_combined <- cbind(mets_train, "test_score" = mets_test$".estimate") %>% 
+        select(-".estimator")
+      mets_combined
+    } else {
+      pred_test <- predict(model_fit(), testing(data_split()), type = "class")
+      pred_train <- predict(model_fit(), training(data_split()), type = "class")
+      
+      pred_train_df <- cbind(training(data_split()), .pred_class = pred_train)
+      pred_test_df <- cbind(testing(data_split()), .pred_class = pred_test)
+      
+      target <- input$target_var
+      pred_train_df[[target]] <- as.factor(pred_train_df[[target]])
+      pred_test_df[[target]] <- as.factor(pred_test_df[[target]])
+      
+      pred_train_df$.pred_class <- factor(pred_train_df$.pred_class, levels = levels(pred_train_df[[target]]))
+      pred_test_df$.pred_class <- factor(pred_test_df$.pred_class, levels = levels(pred_test_df[[target]]))
+      
+      met1_train <- yardstick::accuracy(pred_train_df, truth = !!sym(target), estimate = .pred_class)
+      met2_train <- yardstick::f_meas(pred_train_df, truth = !!sym(target), estimate = .pred_class)
+      met3_train <- yardstick::precision(pred_train_df, truth = !!sym(target), estimate = .pred_class)
+      mets_train <- rbind(met1_train, met2_train, met3_train)
+      names(mets_train) <- c("metric", ".estimator", "train_score")
+      
+      met1_test <- yardstick::accuracy(pred_test_df, truth = !!sym(target), estimate = .pred_class)
+      met2_test <- yardstick::f_meas(pred_test_df, truth = !!sym(target), estimate = .pred_class)
+      met3_test <- yardstick::precision(pred_test_df, truth = !!sym(target), estimate = .pred_class)
+      mets_test <- rbind(met1_test, met2_test, met3_test)
+      
+      mets_combined <- cbind(mets_train, "test_score" = mets_test$".estimate")
+      mets_combined <- mets_combined %>% select(-".estimator")
+      mets_combined
+    }
   })
+  
+  session$onSessionEnded(function() { stopApp() })
 }
