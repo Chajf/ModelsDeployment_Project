@@ -40,7 +40,7 @@ Assigne: Michał and Patryk
 
 Assigne: Michał and Patryk
 
-![Layout conept](/layout_concpet2.png)
+![Layout conept](/layout_concpet.png)
 
 - [x] Implementation of user interface concept - creating UI layout based on created concept
 
