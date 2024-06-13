@@ -10,7 +10,7 @@ library(dplyr)
 
 tidymodels_prefer()
 conflicted::conflicts_prefer(shiny::observe)
-
+conflicted::conflicts_prefer(plotly::layout)
 
 
 # Define server logic required to draw a histogram
@@ -38,32 +38,6 @@ function(input, output, session) {
         row.names = c('Number of variables','Number of observations','Missing values')) |> 
       `colnames<-`('Value'),
     options = list(dom = 't'))
-  
-  output$distPlot <- renderPlot({
-
-      # generate bins based on input$bins from ui.R
-      x    <- faithful[, 2]
-      bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-      # draw the histogram with the specified number of bins
-      hist(x, breaks = bins, col = 'darkgray', border = 'white',
-           xlab = 'Waiting time to next eruption (in mins)',
-           main = 'Histogram of waiting times')
-
-  })
-  # 
-  # output$distPlot2 <- renderPlot({
-  #     
-  #   # generate bins based on input$bins from ui.R
-  #   x    <- faithful[, 2]
-  #   bins <- seq(min(x), max(x), length.out = input$bins2 + 1)
-  #   
-  #   # draw the histogram with the specified number of bins
-  #   hist(x, breaks = bins, col = 'darkgray', border = 'white',
-  #        xlab = 'Waiting time to next eruption (in mins)',
-  #        main = 'Histogram of waiting times')
-  #     
-  # })
   
   modifiedData <- reactiveValues(df = NULL)
   
@@ -372,15 +346,6 @@ function(input, output, session) {
   })
   
   session$onSessionEnded(function() { stopApp() })
-
-  # output$missing_values <- renderDT({
-  #   req(data())
-  #   df <- modifiedData$df 
-  #   missing_values <- df %>%
-  #     dplyr::summarise_all(function(x) sum(is.na(x))) %>%
-  #     tidyr::gather(key = "Variable", value = "Number of Missing Values")
-  #   DT::datatable(missing_values, options = list(dom = 't'), rownames = FALSE)
-  # })
   
   output$imputation <- renderUI({
     df <- modifiedData$df 
@@ -412,10 +377,8 @@ function(input, output, session) {
     })
   })
   
-  # Define the function to calculate statistics
   calculate_dataframe_statistics <- function(df) {
     
-    # Function to calculate statistics for numerical variables
     calculate_numeric_stats <- function(x, var_name) {
       stats <- data.frame(
         Variable = var_name,
@@ -431,7 +394,6 @@ function(input, output, session) {
       return(stats)
     }
     
-    # Function to calculate statistics for character variables
     calculate_character_stats <- function(x, var_name) {
       value_counts <- sort(table(x), decreasing = TRUE)
       most_common_values <- names(value_counts)[1:min(5, length(value_counts))]
@@ -448,11 +410,9 @@ function(input, output, session) {
       return(stats)
     }
     
-    # Separate numeric and character variables
     numeric_vars <- df %>% select(where(is.numeric))
     character_vars <- df %>% select(where(is.character))
     
-    # Apply the statistics calculation function to each variable
     numeric_stats <- lapply(names(numeric_vars), function(var) {
       calculate_numeric_stats(numeric_vars[[var]], var)
     })
@@ -460,7 +420,6 @@ function(input, output, session) {
       calculate_character_stats(character_vars[[var]], var)
     })
     
-    # Combine the results into dataframes
     numeric_result_df <- bind_rows(numeric_stats)
     character_result_df <- bind_rows(character_stats)
     
@@ -481,8 +440,6 @@ function(input, output, session) {
     datatable(result_df$character)
   })
   
-  
-  # Render the plot based on the selected variables
   output$visualisation_plot <- renderPlotly({
     req(input$variables_vis, data())
     df <- modifiedData$df
@@ -534,4 +491,3 @@ function(input, output, session) {
     }
   })
 }
-
