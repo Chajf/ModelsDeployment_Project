@@ -106,8 +106,8 @@ function(input, output, session) {
   
   output$pre_steps <- renderUI({
     selected_checkboxes <- sum(c(input$normalize, input$dummy, input$pca, input$remove_zero_var, 
-                                 input$remove_near_zero_var, input$log_transform, input$class_other, 
-                                 input$sqrt_transform), na.rm = TRUE)
+                                 input$remove_near_zero_var, input$yeojohnson, input$class_other, 
+                                 input$inv_transform), na.rm = TRUE)
     value_box(title = "Preprocessing steps",
       value = selected_checkboxes,
       icon = icon("check-square"),
@@ -140,10 +140,21 @@ function(input, output, session) {
   })
   
   output$transforms_ui <- renderUI({
-    if (input$log_transform) {
+    if (input$yeojohnson) {
       numeric_vars <- names(modifiedData$df)[sapply(modifiedData$df, is.numeric)]
-      selectizeInput("select_log",
-                     "Select variables for log trasform",
+      selectizeInput("select_yj",
+                     "Select variables for Yeo-Johnson trasform",
+                     choices = numeric_vars,
+                     multiple = TRUE
+      )
+    }
+  })
+  
+  output$transforms_ui_inv <- renderUI({
+    if (input$inv_transform) {
+      numeric_vars <- names(modifiedData$df)[sapply(modifiedData$df, is.numeric)]
+      selectizeInput("select_inv",
+                     "Select variables for Inverse trasform",
                      choices = numeric_vars,
                      multiple = TRUE
       )
@@ -167,7 +178,7 @@ function(input, output, session) {
   
   dummy_model <- function(input_model, input_dummy) {
     if ((input_model == "XGBoost" || input_model == "SVM") && input_dummy == F) {
-      "This model need 'Dummy Variable' preprocessing step"
+      "This model need 'Dummy Variable' preprocessing step!"
     } else {
       NULL
     }
@@ -175,7 +186,15 @@ function(input, output, session) {
   
   req_data <- function(input) {
     if (!is.data.frame(input)) {
-      "Provide data"
+      "Provide data!"
+    } else {
+      NULL
+    }
+  }
+  
+  any_nans <- function(input) {
+    if (anyNA.data.frame(input)) {
+      "Data can't have any NA values!"
     } else {
       NULL
     }
@@ -184,6 +203,7 @@ function(input, output, session) {
   model_fit <- eventReactive(input$train_model, {
     
     validate(req_data(modifiedData$df))
+    validate(any_nans(modifiedData$df))
     validate(dummy_model(input$model_select, input$dummy))
     
     switch(input$model_select,
@@ -194,7 +214,6 @@ function(input, output, session) {
              else {
                model_spec <- decision_tree(mode = "classification")
              }
-             
            },
            "XGBoost"={
              if (sapply(modifiedData$df[input$target_var],class)=="numeric"){
@@ -220,7 +239,7 @@ function(input, output, session) {
                model_spec <- svm_linear(mode = "classification")
              }
            })
-
+    
     rec <- recipe(as.formula(paste(input$target_var, "~ .")), data = training(data_split()))
 
     if (input$dummy){
@@ -243,14 +262,14 @@ function(input, output, session) {
         step_nzv(all_numeric_predictors())
     }
     
-    if (input$log_transform){
+    if (input$yeojohnson){
       rec <- rec %>% 
-        step_log(input$select_log)
+        step_YeoJohnson(input$select_yj)
     }
     
-    if (input$sqrt_transform){
+    if (input$inv_transform){
       rec <- rec %>% 
-        step_sqrt(all_numeric_predictors())
+        step_inverse(input$select_inv)
     }
     
     if (input$class_other){
@@ -262,11 +281,11 @@ function(input, output, session) {
       rec <- rec %>% 
         step_pca(all_numeric_predictors(),num_comp = input$pca_comp)
     }
-
+    
     wf <- workflow() %>%
       add_model(model_spec) %>%
       add_recipe(rec)
-
+    
     fit(wf, data = modifiedData$df)
   })
   
@@ -284,9 +303,19 @@ function(input, output, session) {
   
   output$model_pred <- DT::renderDataTable({
     req(model_fit())
-    pred <- predict(model_fit(), testing(data_split()))
-    pred_full <- cbind(testing(data_split()), pred)
-    DT::datatable(pred_full, options = list(scrollX = TRUE))
+    if (sapply(modifiedData$df[input$target_var],class)=="numeric"){
+      print(head(testing(data_split()), n=1))
+      pred <- predict(model_fit(), testing(data_split()))
+      pred_full <- cbind(testing(data_split()), pred)
+      DT::datatable(pred_full, options = list(scrollX = TRUE))
+    } else {
+      target <- input$target_var
+      pred_test_df <- testing(data_split())
+      pred_test_df[[target]] <- as.factor(pred_test_df[[target]])
+      pred <- predict(model_fit(), pred_test_df, type = "class")
+      pred_full <- cbind(pred_test_df, pred)
+      DT::datatable(pred_full, options = list(scrollX = TRUE))
+    }
   })
   
   output$model_mets <- renderTable({
