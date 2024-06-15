@@ -42,7 +42,7 @@ function(input, output, session) {
   modifiedData <- reactiveValues(df = NULL)
   
   observe({
-    output$df_table <- renderDT(modifiedData$df)
+    output$df_table <- renderDT(datatable(modifiedData$df))
   })
   
   output$varSelect <- renderUI({
@@ -52,7 +52,8 @@ function(input, output, session) {
         selectInput(inputId = name, 
                     label = paste("Choose a type for variable:", name), 
                     choices = if(is.numeric(df[[name]])) c("Numeric", "Character", "Logical") else c("Character", "Numeric", "Logical")),
-        htmlOutput(paste0(name, "_error"))
+        htmlOutput(paste0(name, "_error")),
+        hr()
       )
     })
   })
@@ -349,15 +350,32 @@ function(input, output, session) {
   
   output$imputation <- renderUI({
     df <- modifiedData$df 
-    lapply(names(df), function(name){
+    lapply(names(df), function(name) {
       tagList(
-        selectInput(inputId = paste0(name, "_impute_method"), 
-                    label = HTML(paste("Choose an imputation method for variable: <b>", name, "</b>")), 
-                    choices = if(is.numeric(df[[name]])) c("Median") else "Mode"),
-        textInput(inputId = paste0(name, "_na_strings"),
-                  label = HTML(paste("Enter values to be treated as NA's (comma separated)")),
-                  value = ""),
-        actionButton(inputId = paste0(name, "_impute_button"), label = "Impute")
+        tags$div(
+          selectInput(
+            inputId = paste0(name, "_impute_method"), 
+            label = HTML(paste("Variable: <b>", name, "</b></br>Choose an imputation method")), 
+            choices = if(is.numeric(df[[name]])) c("Median") else "Mode"
+          ),
+          class = "custom-spacing"
+        ),
+        tags$div(
+          textInput(
+            inputId = paste0(name, "_na_strings"),
+            label = HTML(paste("Enter values to be treated as NA's (comma separated)")),
+            value = ""
+          ),
+          class = "custom-spacing"
+        ),
+        tags$div(
+          actionButton(
+            inputId = paste0(name, "_impute_button"), 
+            label = "Impute"
+          ),
+          class = "custom-spacing"
+        ),
+        tags$div(hr())
       )
     })
   })
@@ -437,7 +455,9 @@ function(input, output, session) {
     req(data())
     df <- modifiedData$df
     result_df <- calculate_dataframe_statistics(df)
-    datatable(result_df$character)
+    result_df_char <- result_df$character
+    colnames(result_df_char) <- c('Variable','Count', 'Mode', 'Unique values', '5 most common values')
+    datatable(result_df_char)
   })
   
   output$visualisation_plot <- renderPlotly({

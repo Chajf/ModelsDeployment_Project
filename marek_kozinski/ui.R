@@ -16,6 +16,10 @@ tab1 <- fillPage(
     .container-fluid {
       max-width: 100%;
     }
+    .custom-spacing {
+      margin-bottom: 0px;
+      margin-top: 0px;
+    }
     #df_table_div {
       overflow-x: auto;
       overflow-y: auto;
@@ -31,7 +35,7 @@ tab1 <- fillPage(
     sidebar = sidebar(
       titlePanel(HTML("Imputation")),
       width = 500,
-      open = "closed",
+      open = "open",
       DTOutput("missing_values"),
       uiOutput("imputation"),
     ),
@@ -114,6 +118,14 @@ exploration <- page_fillable(
 
 
 tab_m1 <- fluidPage(
+  tags$style(HTML("
+    .container-fluid {
+      max-width: 100%;
+    #model_building_title {
+      margin-left: 20px;
+      margin-top: 10px;
+    }
+  ")),
   layout_sidebar(
     sidebar = sidebar(
       titlePanel("Model target"),
@@ -138,7 +150,7 @@ tab_m1 <- fluidPage(
       width = 300,
       open = "open",
     ),
-    titlePanel("Model building summary"),
+    div(id = "model_building_title", titlePanel(HTML("Model building summary"))),
     uiOutput("v_box"),
     uiOutput("model_select"),
     uiOutput("train_size"),
@@ -163,16 +175,24 @@ tab_m2 <- fluidPage(
         width: auto !important;
         margin: 0 auto !important;
       }
+      #model_pred_table {
+      overflow-x: auto;
+      overflow-y: auto;
+      margin-left: 20px;
+      margin-right: 20px;
+      }
     "))
     ),
     div(class = "centered-table", tableOutput("model_mets")),
-    titlePanel("Model predictions"),
-    DT::dataTableOutput("model_pred"),
+    # titlePanel("Model predictions"),
+    div(id = "model_pred_table", 
+        h3("Model predictions"),
+        DT::dataTableOutput("model_pred")),
 )
 
 page2 <- page_fillable(
   navset_card_underline(
-    title = "Model Building",
+    title = HTML("<span style='font-size:100%; font-weight:bold;'>Model Building</span>"),
     nav_panel("Building", tab_m1),
     nav_panel("Results", tab_m2)
   ),
