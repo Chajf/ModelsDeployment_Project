@@ -23,7 +23,7 @@ The application is particularly useful for educators, researchers, and business 
 - Upload your own datasets in CSV format.
 
 <p align="center">
-  <img src="/images/placeholder.png">
+  <img src="/images/data_upload.gif">
 </p>
 
 - View and manage uploaded data.
@@ -31,21 +31,21 @@ The application is particularly useful for educators, researchers, and business 
 - Display data in a tabular format.
 
 <p align="center">
-  <img src="/images/placeholder.png">
+  <img src="/images/imputation.gif">
 </p>
 
 #### Data Exploration and Visualization
 - Calculate and display basic statistics for numeric and character variables.
 
 <p align="center">
-  <img src="/images/placeholder.png">
+  <img src="/images/statistics.gif">
 </p>
 
 - Generate plots for single variables (histograms, bar charts).
 - Create distribution plots for up to two variables (scatter plots, box plots).
 
 <p align="center">
-  <img src="/images/placeholder.png">
+  <img src="/images/plots.gif">
 </p>
 
 
@@ -57,7 +57,7 @@ The application is particularly useful for educators, researchers, and business 
 - Train the selected model and evaluate its performance.
 
 <p align="center">
-  <img src="/images/placeholder.png">
+  <img src="/images/model_training.gif">
 </p>
 
 #### Model Evaluation and Predictions
@@ -65,7 +65,7 @@ The application is particularly useful for educators, researchers, and business 
 - Provide summary reports of model performance.
 
 <p align="center">
-  <img src="/images/placeholder.png">
+  <img src="/images/model_results.gif">
 </p>
 
 ### Tasks
@@ -81,7 +81,7 @@ The application is particularly useful for educators, researchers, and business 
     - Identify key functionalities for user interface
 
 <p align="center">
-  <img src="/layout_concpet.png">
+  <img src="/images/layout_concpet.png">
 </p>
 
 >Assigne: Michał and Patryk
