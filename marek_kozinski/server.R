@@ -7,6 +7,8 @@ library(tidymodels)
 library(plotly)
 library(psych)
 library(dplyr)
+library(ranger)
+library(xgboost)
 
 tidymodels_prefer()
 conflicted::conflicts_prefer(shiny::observe)
