@@ -15,15 +15,38 @@ conflicted::conflicts_prefer(shiny::observe)
 conflicted::conflicts_prefer(plotly::layout)
 
 
-# Define server logic required to draw a histogram
 function(input, output, session) {
   
   data <- reactive({
     req(input$upload)
-    df <- read.csv(input$upload$datapath, sep = input$sep, header = input$header, dec = if(input$sep == ";") "," else ".")
-    # updateSelectInput(session, "summ_variable", choices = names(df))  # Update the selectInput here
-    updateSelectInput(session, "variables_vis", choices = names(df))  # Update the selectInput here
-    df
+    
+    possible_seps <- list("Comma" = ",", "Semicolon" = ";", "Tab" = "\t")
+    
+    if (!is.null(input$sep) && input$sep %in% unlist(possible_seps)) {
+      selected_sep <- input$sep
+      try({
+        df <- read.csv(input$upload$datapath, sep = selected_sep, header = input$header, dec = if(selected_sep == ";") "," else ".")
+        
+        updateSelectInput(session, "variables_vis", choices = names(df))
+        return(df)
+      }, silent = TRUE)
+    }
+    
+    for (sep_name in names(possible_seps)) {
+      sep <- possible_seps[[sep_name]]
+      if (is.null(input$sep) || sep != input$sep) {
+        try({
+          df <- read.csv(input$upload$datapath, sep = sep, header = input$header, dec = if(sep == ";") "," else ".")
+          
+          updateSelectInput(session, "variables_vis", choices = names(df))
+          updateSelectInput(session, "sep", selected = possible_seps[[sep_name]])
+          showNotification("Seprator chnaged due to error with reading CSV file using the one selected.", type = "message")
+          return(df)
+        }, silent = TRUE)
+      }
+    }
+    
+    showNotification("Error reading CSV file with all possible separators.", type = "error")
   })
   
   modifiedData <- reactiveValues(df = NULL)
@@ -180,7 +203,7 @@ function(input, output, session) {
   })
   
   dummy_model <- function(input_model, input_dummy) {
-    if ((input_model == "XGBoost" || input_model == "SVM") && input_dummy == F) {
+    if (((input_model == "XGBoost" || input_model == "SVM") && input_dummy == F) && !all(sapply(modifiedData$df, is.numeric))) {
       "This model need 'Dummy Variable' preprocessing step!"
     } else {
       NULL
